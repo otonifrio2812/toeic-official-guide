@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Part 5 Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-start: #1a1a2e;
+            --bg-end: #16213e;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-muted: #cbd5e1;
+            --badge-bg: #f0a500;
+            --btn-bg: rgba(255, 255, 255, 0.1);
+            --btn-hover: rgba(255, 255, 255, 0.2);
+            --color-correct: #22c55e;
+            --color-incorrect: #ef4444;
+            --color-answer: #3b82f6;
+            --exp-bg: rgba(0, 0, 0, 0.4);
+            
+            /* Syntax Colors */
+            --syn-subject: #60a5fa; /* 🔵 藍色 */
+            --syn-verb: #f87171;    /* 🔴 紅色 */
+            --syn-object: #4ade80;  /* 🟢 綠色 */
+            --syn-modifier: #9ca3af;/* 灰色斜體 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Noto Sans', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        /* --- Header: Progress & Score --- */
+        .header {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 0 1rem;
+        }
+
+        .stats {
+            background: var(--card-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 700px;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--badge-bg);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* --- Main Card --- */
+        .card-container {
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        /* Badge and Speaker Wrapper */
+        .badge-wrapper {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+            align-items: center;
+        }
+
+        .badge {
+            background: var(--badge-bg);
+            color: #fff;
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(240, 165, 0, 0.4);
+        }
+
+        .btn-speak {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 50%;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            color: white;
+            outline: none;
+        }
+
+        .btn-speak:hover {
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2.5rem 2rem 2rem 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .question u {
+            text-decoration: none;
+            border-bottom: 2px solid var(--badge-bg);
+            padding: 0 5px;
+        }
+
+        /* --- Options --- */
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .option-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: var(--btn-hover);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-label {
+            font-weight: 700;
+            margin-right: 15px;
+            color: var(--badge-bg);
+        }
+
+        /* Answer States */
+        .option-btn.correct {
+            background: var(--color-correct);
+            border-color: var(--color-correct);
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+        }
+        .option-btn.correct .option-label { color: #fff; }
+
+        .option-btn.incorrect {
+            background: var(--color-incorrect);
+            border-color: var(--color-incorrect);
+            opacity: 0.8;
+        }
+        .option-btn.incorrect .option-label { color: #fff; }
+
+        .option-btn.show-answer {
+            background: var(--color-answer);
+            border-color: var(--color-answer);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        .option-btn.show-answer .option-label { color: #fff; }
+
+        .icon {
+            margin-left: auto;
+            font-size: 1.2rem;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* --- Feedback & Actions --- */
+        .feedback {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .feedback.success { color: #4ade80; }
+        .feedback.error { color: #f87171; }
+
+        .actions {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            display: none; /* Hidden initially */
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .btn-exp {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-exp:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .btn-next {
+            background: var(--badge-bg);
+            color: #fff;
+        }
+
+        .btn-next:hover { background: #d99500; transform: translateY(-2px); }
+
+        /* --- Explanation Panel --- */
+        .exp-panel {
+            background: var(--exp-bg);
+            border-left: 4px solid var(--badge-bg);
+            border-radius: 0 8px 8px 0;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            display: none;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); max-height: 0; }
+            to { opacity: 1; transform: translateY(0); max-height: 1000px; }
+        }
+
+        .exp-full {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .exp-full .answer-word {
+            color: var(--badge-bg);
+            font-weight: 700;
+        }
+
+        .exp-item { margin-bottom: 0.5rem; }
+        .exp-label { font-weight: 600; width: 60px; display: inline-block; }
+        
+        .c-sub { color: var(--syn-subject); }
+        .c-verb { color: var(--syn-verb); }
+        .c-obj { color: var(--syn-object); }
+        .c-mod { color: var(--syn-modifier); font-style: italic; }
+
+        .exp-struct {
+            font-family: monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            color: #fbbf24;
+            display: block;
+        }
+
+        .exp-analysis {
+            background: rgba(240, 165, 0, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        /* --- Result Screen --- */
+        #result-screen {
+            display: none;
+            text-align: center;
+        }
+        
+        .stars { font-size: 3rem; margin-bottom: 1rem; }
+        .final-score { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--badge-bg); }
+        .final-msg { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 2rem; }
+
+        /* Keyboard Hints */
+        .kbd-hint {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+        }
+        kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .card { padding: 2rem 1.5rem 1.5rem 1.5rem; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Stats -->
+    <div class="header" id="header-stats">
+        <div class="stats" id="progress-text">1 / 30</div>
+        <div class="stats" id="score-text">Score: 0 (0%)</div>
+    </div>
+    
+    <div class="progress-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <!-- Main Quiz Area -->
+    <div class="card-container" id="quiz-screen">
+        <div class="badge-wrapper">
+            <div class="badge" id="question-badge">Q101</div>
+            <button class="btn-speak" id="btn-speak" onclick="toggleSpeech()" title="朗讀句子">🔊</button>
+        </div>
+        <div class="card" id="quiz-card">
+            
+            <div class="question" id="question-text">Loading...</div>
+            
+            <div class="options" id="options-container">
+                <!-- Options will be generated here -->
+            </div>
+
+            <div class="feedback" id="feedback-text"></div>
+
+            <div class="actions" id="action-area">
+                <button class="btn btn-exp" id="btn-exp" onclick="toggleExplanation()">📖 詳解</button>
+                <button class="btn btn-next" id="btn-next" onclick="nextQuestion()">Next &rarr;</button>
+            </div>
+
+            <div class="exp-panel" id="exp-panel">
+                <!-- Explanation content will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div class="card-container" id="result-screen">
+        <div class="card">
+            <div class="stars" id="result-stars">⭐⭐⭐</div>
+            <div class="final-score" id="result-score">30 / 30</div>
+            <div class="final-msg" id="result-msg">Perfect! 完美掌握 TOEIC 文法！</div>
+            <button class="btn btn-next" style="width: 200px; margin: 0 auto; display: block;" onclick="restartQuiz()">再練一次 ↺</button>
+        </div>
+    </div>
+
+    <div class="kbd-hint" id="kbd-hint">
+        快捷鍵提示：按 <kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd> 選擇，按 <kbd>Enter</kbd> 下一題
+    </div>
+
+<script>
+    // TOEIC Part 5 Data (Q101-Q130) with Full Explanations
+    const quizData = [
+        { id: 101, q: "Starlight Noodle House ________ to open its first North American restaurant early next year.", opts: {A: "plan", B: "plans", C: "planner", D: "planning"}, ans: "D", 
+          exp: { full: "Starlight Noodle House is <span class='answer-word'>planning</span> to open its first North American restaurant early next year.", sub: "Starlight Noodle House", verb: "is planning（現在進行式）", obj: "to open its first North American restaurant", mod: "early next year", struct: "主詞 + be動詞 + V-ing + 不定詞片語 + 時間副詞", analysis: "planning為現在分詞，plan/plans/planner詞性不合" } },
+        { id: 102, q: "For a small fee, Marvin's Fine Furniture will ________ items to customers' homes within two days of purchase.", opts: {A: "deliver", B: "sell", C: "report", D: "spend"}, ans: "A",
+          exp: { full: "For a small fee, Marvin's Fine Furniture will <span class='answer-word'>deliver</span> items to customers' homes within two days of purchase.", sub: "Marvin's Fine Furniture", verb: "will deliver（未來式）", obj: "items", mod: "to customers' homes / within two days", struct: "介詞片語 + 主詞 + will + 原形動詞 + 受詞 + 介詞片語", analysis: "will後接原形動詞，語意「送貨到府」選deliver" } },
+        { id: 103, q: "There is no price ________ among Kalteco's three refrigerator models.", opts: {A: "differ", B: "different", C: "difference", D: "differently"}, ans: "C",
+          exp: { full: "There is no price <span class='answer-word'>difference</span> among Kalteco's three refrigerator models.", sub: "price difference", verb: "is", mod: "among Kalteco's three refrigerator models", struct: "There + be動詞 + 名詞片語 + 介詞片語", analysis: "price後填名詞構成複合名詞，difference正確，differ/different/differently詞性不合" } },
+        { id: 104, q: "McAlvey's Rental will provide the tents and seating needed ________ the upcoming festival.", opts: {A: "against", B: "near", C: "into", D: "for"}, ans: "D",
+          exp: { full: "McAlvey's Rental will provide the tents and seating needed <span class='answer-word'>for</span> the upcoming festival.", sub: "McAlvey's Rental", verb: "will provide", obj: "the tents and seating needed", mod: "for the upcoming festival", struct: "主詞 + will + 動詞 + 受詞 + 介詞片語", analysis: "「為了活動所需」用介詞for，against/near/into語意不符" } },
+        { id: 105, q: "Mr. Sorva handles all purchase orders ________ unless special approvals are needed.", opts: {A: "he", B: "him", C: "his", D: "himself"}, ans: "D",
+          exp: { full: "Mr. Sorva handles all purchase orders <span class='answer-word'>himself</span> unless special approvals are needed.", sub: "Mr. Sorva", verb: "handles", obj: "all purchase orders", mod: "himself（反身代名詞強調）", struct: "主詞 + 動詞 + 受詞 + 反身代名詞（強調用法）+ 副詞子句", analysis: "himself強調「親自」處理，he/him/his詞性不合此強調用法" } },
+        { id: 106, q: "We appreciate your patience ________ our technology team works to restore the connection.", opts: {A: "if", B: "while", C: "whether", D: "but"}, ans: "B",
+          exp: { full: "We appreciate your patience <span class='answer-word'>while</span> our technology team works to restore the connection.", sub: "We", verb: "appreciate", obj: "your patience", mod: "while our technology team works...", struct: "主詞 + 動詞 + 受詞 + 副詞子句（while+主詞+動詞）", analysis: "while表「同時期間」，if/whether/but語意不符" } },
+        { id: 107, q: "Davison Avionics' sales department is ________ recruiting additional team members.", opts: {A: "actively", B: "active", C: "activate", D: "activity"}, ans: "A",
+          exp: { full: "Davison Avionics' sales department is <span class='answer-word'>actively</span> recruiting additional team members.", sub: "Davison Avionics' sales department", verb: "is recruiting（現在進行式）", obj: "additional team members", mod: "actively", struct: "主詞 + be動詞 + 副詞 + V-ing + 受詞", analysis: "修飾動詞recruiting需用副詞actively，active形容詞/activate動詞/activity名詞詞性不合" } },
+        { id: 108, q: "It has been six months ________ Mr. Payne became president of Thornton Machinery.", opts: {A: "since", B: "from", C: "where", D: "between"}, ans: "A",
+          exp: { full: "It has been six months <span class='answer-word'>since</span> Mr. Payne became president of Thornton Machinery.", sub: "It", verb: "has been", mod: "since Mr. Payne became president...", struct: "It + has been + 時間段 + since + 過去式子句", analysis: "固定句型：It has been+時間+since+過去式，表「自從…以來」" } },
+        { id: 109, q: "The company has stayed profitable ________ by keeping operating costs low.", opts: {A: "shortly", B: "highly", C: "mainly", D: "greatly"}, ans: "C",
+          exp: { full: "The company has stayed profitable <span class='answer-word'>mainly</span> by keeping operating costs low.", sub: "The company", verb: "has stayed", obj: "profitable（補語）", mod: "mainly / by keeping operating costs low", struct: "主詞 + 動詞 + 形容詞補語 + 副詞 + 介詞片語", analysis: "mainly修飾介詞片語，語意最符；shortly/highly/greatly均不自然" } },
+        { id: 110, q: "Clients of Elise Salon receive text messages asking them to confirm their ________.", opts: {A: "appoint", B: "appointed", C: "appointing", D: "appointments"}, ans: "D",
+          exp: { full: "Clients of Elise Salon receive text messages asking them to confirm their <span class='answer-word'>appointments</span>.", sub: "Clients of Elise Salon", verb: "receive", obj: "text messages", mod: "asking them to confirm their appointments", struct: "主詞 + 動詞 + 受詞 + 分詞片語（修飾受詞）", analysis: "their後接名詞，appointments（預約複數）正確，appoint動詞/appointed過去分詞/appointing現在分詞詞性不合" } },
+        { id: 111, q: "According to a Consumer Now poll, Bricktown Realty provides the ________ efficient real estate services in the area.", opts: {A: "very", B: "such", C: "quite", D: "most"}, ans: "D",
+          exp: { full: "Bricktown Realty provides the <span class='answer-word'>most</span> efficient real estate services in the area.", struct: "the + most + 形容詞 + 名詞（最高級結構）", analysis: "the most efficient構成最高級「最有效率的」，very/quite/such不構成最高級" } },
+        { id: 112, q: "Tolle Accounting's employee manual states that constructive disagreements are part of an ________ office culture.", opts: {A: "effect", B: "effects", C: "effective", D: "effectively"}, ans: "C",
+          exp: { full: "Constructive disagreements are part of an <span class='answer-word'>effective</span> office culture.", struct: "名詞 + be動詞 + 名詞片語（形容詞修飾名詞）", analysis: "修飾名詞office culture需用形容詞effective，effect/effects為名詞，effectively為副詞" } },
+        { id: 113, q: "Marketing team members may work from home ________ they have their manager's permission.", opts: {A: "as long as", B: "as a result of", C: "depending on", D: "together with"}, ans: "A",
+          exp: { full: "Marketing team members may work from home <span class='answer-word'>as long as</span> they have their manager's permission.", struct: "主詞 + 助動詞 + 動詞 + 副詞子句（as long as+主詞+動詞）", analysis: "as long as表「只要條件成立」，as a result of/depending on/together with語意不符" } },
+        { id: 114, q: "The Petsonk Group is ________ to providing outstanding insurance at an affordable cost.", opts: {A: "reminded", B: "accepted", C: "required", D: "committed"}, ans: "D",
+          exp: { full: "The Petsonk Group is <span class='answer-word'>committed</span> to providing outstanding insurance at an affordable cost.", struct: "主詞 + be動詞 + committed to + V-ing（固定搭配）", analysis: "be committed to + V-ing表「致力於」，reminded/required後接原形不接V-ing，accepted無此搭配" } },
+        { id: 115, q: "The board of directors decided last night that Tina Chau should ________ as head of the legal department.", opts: {A: "continuous", B: "continue", C: "continued", D: "continuously"}, ans: "B",
+          exp: { full: "The board decided that Tina Chau should <span class='answer-word'>continue</span> as head of the legal department.", struct: "主詞 + decided + that子句（should + 原形動詞）", analysis: "should後必須接原形動詞continue，continuous形容詞/continued過去分詞/continuously副詞均不合" } },
+        { id: 116, q: "A large collection of bird fossils will be on display at the museum from May 15 ________ July 31.", opts: {A: "during", B: "until", C: "around", D: "throughout"}, ans: "B",
+          exp: { full: "Bird fossils will be on display at the museum from May 15 <span class='answer-word'>until</span> July 31.", struct: "from + 起點時間 + until + 終點時間（固定搭配）", analysis: "from...until表「從…到…為止」，during不與from搭配，throughout表全程，around表大約" } },
+        { id: 117, q: "Because so many members of the editorial staff use the printer, the office manager ________ has to order extra paper.", opts: {A: "frequency", B: "frequent", C: "frequenting", D: "frequently"}, ans: "D",
+          exp: { full: "The office manager <span class='answer-word'>frequently</span> has to order extra paper.", struct: "主詞 + 副詞 + 助動詞 + 原形動詞（副詞修飾動詞組）", analysis: "修飾動詞組has to order需用副詞frequently，frequency名詞/frequent形容詞詞性不合" } },
+        { id: 118, q: "Mr. Rhee thinks that the missing file is ________ in the archives.", opts: {A: "locating", B: "somewhere", C: "removed", D: "especially"}, ans: "B",
+          exp: { full: "Mr. Rhee thinks that the missing file is <span class='answer-word'>somewhere</span> in the archives.", struct: "主詞 + 動詞 + that子句（主詞 + be動詞 + 地方副詞）", analysis: "somewhere作地方副詞修飾is，locating動詞/removed形容詞語意不符/especially副詞但語意不對" } },
+        { id: 119, q: "Halle Theft Protection notifies customers immediately whenever there is a ________ of data security.", opts: {A: "breach", B: "contract", C: "secret", D: "reminder"}, ans: "A",
+          exp: { full: "There is a <span class='answer-word'>breach</span> of data security.", struct: "There + be動詞 + 名詞 + 介詞片語", analysis: "breach of security為固定搭配「安全漏洞」，contract/secret/reminder語意不符。💡breach = 違反/缺口" } },
+        { id: 120, q: "The assembly instructions for the desk must be written very ________ to ensure that customers understand them.", opts: {A: "clearer", B: "clearest", C: "clears", D: "clearly"}, ans: "D",
+          exp: { full: "The assembly instructions must be written very <span class='answer-word'>clearly</span> to ensure that customers understand them.", struct: "主詞 + 助動詞 + be + 過去分詞 + 副詞（修飾動詞）", analysis: "修飾被動動詞written需用副詞clearly，clearer/clearest為形容詞比較/最高級，clears為動詞" } },
+        { id: 121, q: "According to the Baker Financial Journal, investors' ________ for technology stocks rose sharply this quarter.", opts: {A: "enthusiasm", B: "enthusiast", C: "enthusiastic", D: "enthusiastically"}, ans: "A",
+          exp: { full: "Investors' <span class='answer-word'>enthusiasm</span> for technology stocks rose sharply this quarter.", sub: "investors' enthusiasm", verb: "rose", mod: "sharply / this quarter", struct: "主詞（所有格+名詞）+ 動詞 + 副詞", analysis: "investors'所有格後接名詞enthusiasm（熱情，不可數），enthusiast為人/enthusiastic形容詞/enthusiastically副詞詞性不合" } },
+        { id: 122, q: "All outerwear made by Arctic Hare is designed to withstand ________ cold temperatures.", opts: {A: "generously", B: "famously", C: "extremely", D: "suspiciously"}, ans: "C",
+          exp: { full: "All outerwear is designed to withstand <span class='answer-word'>extremely</span> cold temperatures.", struct: "主詞 + 被動式 + 不定詞 + 副詞 + 形容詞 + 名詞", analysis: "修飾形容詞cold需用副詞extremely，generously/famously/suspiciously語意不符耐寒語境" } },
+        { id: 123, q: "________ scheduling an examination at Central Wellness Clinic, clients will be asked a few health-related questions.", opts: {A: "Whereas", B: "When", C: "Although", D: "At"}, ans: "B",
+          exp: { full: "<span class='answer-word'>When</span> scheduling an examination at Central Wellness Clinic, clients will be asked a few health-related questions.", struct: "When + V-ing（分詞構句）+ 主要子句", analysis: "When scheduling = When clients are scheduling，表時間條件；Whereas/Although表對比轉折，At為介詞不接子句" } },
+        { id: 124, q: "Owing to staff relocations, the company now has a ________ of office space at its headquarters.", opts: {A: "rate", B: "surplus", C: "factor", D: "profit"}, ans: "B",
+          exp: { full: "The company now has a <span class='answer-word'>surplus</span> of office space at its headquarters.", struct: "主詞 + 動詞 + 不定冠詞 + 名詞 + 介詞片語", analysis: "surplus（剩餘）符合「人員遷走後辦公室空間多餘」，rate/factor/profit語意不符。💡surplus = 多餘的數量" } },
+        { id: 125, q: "Having participated in ________ interviews during her job search, Ms. McKray expects that she will be hired soon.", opts: {A: "sizable", B: "countless", C: "plentiful", D: "much"}, ans: "B",
+          exp: { full: "Having participated in <span class='answer-word'>countless</span> interviews, Ms. McKray expects that she will be hired soon.", struct: "完成式分詞構句 + 主要子句", analysis: "countless修飾可數名詞複數interviews，sizable語意弱，plentiful修飾抽象事物，much不修飾可數名詞" } },
+        { id: 126, q: "Two prototypes of Viesso's mountain bike underwent user testing, and ________ were found to perform exceptionally well.", opts: {A: "less", B: "whose", C: "which", D: "both"}, ans: "D",
+          exp: { full: "Two prototypes underwent user testing, and <span class='answer-word'>both</span> were found to perform exceptionally well.", struct: "主要子句 + and + 主詞（both）+ 被動式", analysis: "both完美呼應前文「兩個原型」，less較少/whose所有格/which關係代名詞語法語意不符" } },
+        { id: 127, q: "________ Ms. Uribe was promoted to director of development at Cranhurst International, she served in many other capacities.", opts: {A: "Before", B: "Instead", C: "Likewise", D: "Consequently"}, ans: "A",
+          exp: { full: "<span class='answer-word'>Before</span> Ms. Uribe was promoted to director, she served in many other capacities.", struct: "Before + 副詞子句 + 主要子句（時間先後）", analysis: "Before表「升遷之前曾任其他職位」，時間順序正確；Instead/Likewise/Consequently語意不符" } },
+        { id: 128, q: "Landscape designers usually present several renderings to clients to help them ________ the completed project.", opts: {A: "appear", B: "resemble", C: "visualize", D: "express"}, ans: "C",
+          exp: { full: "Landscape designers help clients <span class='answer-word'>visualize</span> the completed project.", struct: "help + 受詞 + 原形動詞（使役動詞結構）", analysis: "help sb.(to)+原形動詞，visualize「想像/視覺化」語意最貼切；appear/resemble/express語意不符" } },
+        { id: 129, q: "________ silk will be imported from Japan for our evening-wear fashion designs next season.", opts: {A: "Luxuriate", B: "Luxuriously", C: "Luxuries", D: "Luxurious"}, ans: "D",
+          exp: { full: "<span class='answer-word'>Luxurious</span> silk will be imported from Japan for our evening-wear fashion designs next season.", sub: "Luxurious silk", verb: "will be imported", struct: "形容詞 + 名詞（主詞）+ will be + 過去分詞", analysis: "空格修飾名詞silk需用形容詞Luxurious，Luxuriate動詞/Luxuriously副詞/Luxuries名詞複數詞性不合" } },
+        { id: 130, q: "If its advertising revenue declines further, the magazine's future prospects are ________.", opts: {A: "reported", B: "insignificant", C: "uncertain", D: "overlooked"}, ans: "C",
+          exp: { full: "If its advertising revenue declines further, the magazine's future prospects are <span class='answer-word'>uncertain</span>.", struct: "If + 條件子句 + 主要子句（主詞 + be動詞 + 形容詞補語）", analysis: "be動詞後接形容詞補語uncertain「不確定的」，廣告收入下滑→前景不明朗；reported/insignificant/overlooked語意不符" } }
+    ];
+
+    // State Variables
+    let currentIdx = 0;
+    let score = 0;
+    let hasAnswered = false;
+    let isSpeaking = false;
+
+    // DOM Elements
+    const elProgText = document.getElementById('progress-text');
+    const elScoreText = document.getElementById('score-text');
+    const elProgBar = document.getElementById('progress-bar');
+    const elBadge = document.getElementById('question-badge');
+    const elQText = document.getElementById('question-text');
+    const elOptions = document.getElementById('options-container');
+    const elFeedback = document.getElementById('feedback-text');
+    const elActions = document.getElementById('action-area');
+    const elExpPanel = document.getElementById('exp-panel');
+    const elQuizCard = document.getElementById('quiz-card');
+    const elQuizScreen = document.getElementById('quiz-screen');
+    const elResultScreen = document.getElementById('result-screen');
+    const elHeaderStats = document.getElementById('header-stats');
+    const elProgContainer = document.getElementById('progress-container');
+    const elKbdHint = document.getElementById('kbd-hint');
+    const elBtnSpeak = document.getElementById('btn-speak');
+
+    // Initialize
+    function init() {
+        currentIdx = 0;
+        score = 0;
+        elQuizScreen.style.display = 'block';
+        elResultScreen.style.display = 'none';
+        elHeaderStats.style.display = 'flex';
+        elProgContainer.style.display = 'block';
+        elKbdHint.style.display = 'block';
+        
+        // Stop any ongoing speech
+        if(window.speechSynthesis) window.speechSynthesis.cancel();
+        isSpeaking = false;
+        
+        loadQuestion();
+    }
+
+    // Load Question
+    function loadQuestion() {
+        hasAnswered = false;
+        const qData = quizData[currentIdx];
+        
+        // Stop speech when moving to new question
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        elBtnSpeak.innerText = '🔊';
+        
+        // Update Stats
+        elProgText.innerText = `${currentIdx + 1} / ${quizData.length}`;
+        const pct = Math.round((score / Math.max(currentIdx, 1)) * 100) || 0;
+        elScoreText.innerText = `Score: ${score} (${pct}%)`;
+        elProgBar.style.width = `${((currentIdx) / quizData.length) * 100}%`;
+
+        // Update Card Content
+        elBadge.innerText = `Q${qData.id}`;
+        
+        // Highlight blank
+        const formattedQ = qData.q.replace(/________/g, '<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>');
+        elQText.innerHTML = formattedQ;
+
+        // Reset UI
+        elFeedback.innerHTML = '';
+        elFeedback.className = 'feedback';
+        elActions.style.display = 'none';
+        elExpPanel.style.display = 'none';
+        
+        // Re-trigger animation
+        elQuizCard.style.animation = 'none';
+        void elQuizCard.offsetWidth; // Trigger reflow
+        elQuizCard.style.animation = 'fadeInUp 0.5s ease forwards';
+
+        // Render Options
+        elOptions.innerHTML = '';
+        const optionsArr = ['A', 'B', 'C', 'D'];
+        optionsArr.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.id = `opt-${opt}`;
+            btn.innerHTML = `<span class="option-label">(${opt})</span> ${qData.opts[opt]}`;
+            btn.onclick = () => selectOption(opt);
+            elOptions.appendChild(btn);
+        });
+    }
+
+    // Speech Synthesis Logic
+    function stripHTML(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    function toggleSpeech() {
+        if (!window.speechSynthesis) {
+            alert("您的瀏覽器不支援發音功能");
+            return;
+        }
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+            elBtnSpeak.innerText = '🔊';
+            return;
+        }
+
+        const qData = quizData[currentIdx];
+        let textToSpeak = "";
+        
+        if (hasAnswered) {
+            // Read full correct sentence if answered
+            textToSpeak = stripHTML(qData.exp.full);
+        } else {
+            // Read question with "blank" before answering
+            textToSpeak = qData.q.replace(/________/g, "blank");
+        }
+
+        const utter = new SpeechSynthesisUtterance(textToSpeak);
+        utter.lang = 'en-US';
+        utter.rate = 0.85;
+        utter.pitch = 1;
+
+        const voices = window.speechSynthesis.getVoices();
+        const engVoice = voices.find(v => v.lang.startsWith('en'));
+        if (engVoice) utter.voice = engVoice;
+
+        utter.onend = () => {
+            isSpeaking = false;
+            elBtnSpeak.innerText = '🔊';
+        };
+        
+        utter.onerror = () => {
+            isSpeaking = false;
+            elBtnSpeak.innerText = '🔊';
+        };
+
+        window.speechSynthesis.speak(utter);
+        isSpeaking = true;
+        elBtnSpeak.innerText = '⏹';
+    }
+
+    // Handle Selection
+    function selectOption(selectedOpt) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        // Auto stop reading when a choice is made
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        elBtnSpeak.innerText = '🔊';
+
+        const qData = quizData[currentIdx];
+        const isCorrect = selectedOpt === qData.ans;
+
+        // Update score
+        if (isCorrect) score++;
+
+        // Disable all buttons
+        const allBtns = elOptions.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => btn.disabled = true);
+
+        // Highlight selected and correct options
+        const selectedBtn = document.getElementById(`opt-${selectedOpt}`);
+        const correctBtn = document.getElementById(`opt-${qData.ans}`);
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct');
+            selectedBtn.innerHTML += '<span class="icon">✅</span>';
+            elFeedback.innerText = 'Correct! 🎉';
+            elFeedback.className = 'feedback success';
+        } else {
+            selectedBtn.classList.add('incorrect');
+            selectedBtn.innerHTML += '<span class="icon">❌</span>';
+            correctBtn.classList.add('show-answer');
+            correctBtn.innerHTML += '<span class="icon">✅</span>';
+            elFeedback.innerHTML = `Incorrect. The answer is (${qData.ans}) ${qData.opts[qData.ans]}`;
+            elFeedback.className = 'feedback error';
+        }
+
+        // Show Actions
+        elActions.style.display = 'flex';
+        
+        // Build Explanation Content
+        buildExplanation(qData.exp);
+        
+        // Update stats immediately for current answer
+        const pct = Math.round((score / (currentIdx + 1)) * 100);
+        elScoreText.innerText = `Score: ${score} (${pct}%)`;
+        elProgBar.style.width = `${((currentIdx + 1) / quizData.length) * 100}%`;
+    }
+
+    // Build Explanation HTML dynamically
+    function buildExplanation(expData) {
+        let html = `<div class="exp-full">${expData.full}</div>`;
+        
+        if (expData.sub) html += `<div class="exp-item"><span class="exp-label">主詞</span>：<span class="c-sub">🔵 ${expData.sub}</span></div>`;
+        if (expData.verb) html += `<div class="exp-item"><span class="exp-label">動詞</span>：<span class="c-verb">🔴 ${expData.verb}</span></div>`;
+        if (expData.obj) html += `<div class="exp-item"><span class="exp-label">受詞/補語</span>：<span class="c-obj">🟢 ${expData.obj}</span></div>`;
+        if (expData.mod) html += `<div class="exp-item"><span class="exp-label">修飾語</span>：<span class="c-mod">${expData.mod}</span></div>`;
+        
+        if (expData.struct) html += `<div class="exp-struct">${expData.struct}</div>`;
+        
+        if (expData.analysis) {
+            html += `<div class="exp-analysis">💡 <b>關鍵分析</b>：<br>${expData.analysis}</div>`;
+        }
+        
+        elExpPanel.innerHTML = html;
+    }
+
+    // Toggle Explanation
+    function toggleExplanation() {
+        if (elExpPanel.style.display === 'none') {
+            elExpPanel.style.display = 'block';
+        } else {
+            elExpPanel.style.display = 'none';
+        }
+    }
+
+    // Next Question
+    function nextQuestion() {
+        if (!hasAnswered) return;
+        
+        currentIdx++;
+        if (currentIdx >= quizData.length) {
+            showResult();
+        } else {
+            loadQuestion();
+        }
+    }
+
+    // Show Final Result
+    function showResult() {
+        elQuizScreen.style.display = 'none';
+        elHeaderStats.style.display = 'none';
+        elProgContainer.style.display = 'none';
+        elKbdHint.style.display = 'none';
+        elResultScreen.style.display = 'block';
+
+        const pct = Math.round((score / quizData.length) * 100);
+        let stars = '⭐';
+        let msg = 'Keep practicing! 再接再厲！';
+
+        if (score >= 25) {
+            stars = '⭐⭐⭐';
+            msg = 'Excellent! 完美掌握 TOEIC 文法！🏆';
+        } else if (score >= 15) {
+            stars = '⭐⭐';
+            msg = 'Good job! 繼續保持，再多練幾次會更好！👍';
+        }
+
+        document.getElementById('result-stars').innerText = stars;
+        document.getElementById('result-score').innerText = `${score} / ${quizData.length} (${pct}%)`;
+        document.getElementById('result-msg').innerText = msg;
+    }
+
+    function restartQuiz() {
+        init();
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (!hasAnswered) {
+            const keyMap = { 'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D' };
+            const key = e.key.toLowerCase();
+            if (keyMap[key]) {
+                selectOption(keyMap[key]);
+            }
+        } else {
+            if (e.key === 'Enter') {
+                nextQuestion();
+            }
+        }
+    });
+
+    // Handle voice loading issue on some browsers
+    window.speechSynthesis.onvoiceschanged = function() {
+        // Just trigger the loading of voices so it's ready
+        window.speechSynthesis.getVoices();
+    };
+
+    // Start App
+    window.onload = init;
+</script>
+</body>
+</html>
